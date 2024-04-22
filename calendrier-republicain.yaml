@@ -1,0 +1,56 @@
+- name: Calendrier Republicain Date Debut
+  state: "{{(this.attributes.get('premier_vendemiaire',None)|as_datetime(now())).strftime('%d/%m/%Y')}}"
+  attributes:
+    premier_vendemiaire: "{% with ref=(now()).replace(day=22,month=9,minute=0,hour=0,second=0,microsecond=0) %}{{ref if ref < now() else ref.replace(year=ref.year-1)}}{% endwith %}"
+    jours_depuis_debut: "{{(now()-(this.attributes.get('premier_vendemiaire',None)|as_datetime(now()))).days}}"
+- name: Calendrier Republicain An
+  state: "{{this.attributes.get('chiffre_centaines','')}}{{this.attributes.get('chiffre_dizaines','')}}{{this.attributes.get('chiffre_unites','')}}"
+  attributes:
+    index: "{{(state_attr('sensor.calendrier_republicain_date_debut','premier_vendemiaire')|as_datetime).year - 1791}}"
+    centaines: >-
+      {{ [ '', 'C', 'CC', 'CCC' ]}}
+    dizaines: >-
+      {{ [ '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC' ] }}
+    unites: >-
+      {{ [ '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X' ] }}
+    chiffre_centaines: "{{this.attributes.get('centaines',[])[this.attributes.get('index',0) // 100]}}"
+    chiffre_dizaines: "{{this.attributes.get('dizaines',[])[(this.attributes.get('index',0) // 10) % 10]}}"
+    chiffre_unites: "{{this.attributes.get('unites',[])[this.attributes.get('index',0) % 10]}}"
+- name: Calendrier Republicain Mois
+  state: "{{this.attributes.get('noms',[''])[this.attributes.get('numero',0)]}}"
+  attributes:
+    numero: "{{state_attr('sensor.calendrier_republicain_date_debut','jours_depuis_debut') // 30}}"
+    noms: >-
+      {{ [ "Vendémiaire", "Brumaire", "Frimaire",
+      "Nivôse", "Pluviôse", "Ventôse",
+      "Germinal", "Floréal", "Prairial",
+      "Messidor", "Thermidor", "Fructidor",
+      "Jour complémentaire" ] }}
+- name: Calendrier Republicain Jour du Mois
+  state: "{{1 + state_attr('sensor.calendrier_republicain_date_debut','jours_depuis_debut') % 30}}"
+- name: Calendrier Republicain Nom du Jour
+  state: "{{this.attributes.get('noms',[''])[state_attr('sensor.calendrier_republicain_date_debut','jours_depuis_debut')]}}"
+  attributes:
+    noms: >-
+      {{ [
+      "Raisin","Safran","Châtaigne","Colchique","Cheval","Balsamine","Carotte","Amarante","Panais","Cuve","Pomme de terre","Immortelle","Potiron","Réséda","Âne","Belle-de-nuit","Citrouille","Sarrasin","Tournesol","Pressoir","Chanvre","Pêche","Navet","Amaryllis","Bœuf","Aubergine","Piment","Tomate","Orge",
+      "Tonneau","Pomme","Céleri","Poire","Betterave","Oie","Héliotrope","Figue","Scorsonère","Alisier","Charrue","Salsifis","Mâcre","Topinambour","Endive","Dindon","Chervis","Cresson","Dentelaire","Grenade","Herse","Bacchante","Azerole","Garance","Orange","Faisan","Pistache","Macjonc","Coing","Cormier","Rouleau",
+      "Raiponce","Turneps","Chicorée","Nèfle","Cochon","Mâche","Chou-fleur","Miel","Genièvre","Pioche","Cire","Raifort","Cèdre","Sapin","Chevreuil","Ajonc","Cyprès","Lierre","Sabine","Hoyau","Érable sucré","Bruyère","Roseau","Oseille","Grillon","Pignon","Liège","Truffe","Olive","Pelle",
+      "Tourbe","Houille","Bitume","Soufre","Chien","Lave","Terre végétale","Fumier","Salpêtre","Fléau","Granit","Argile","Ardoise","Grès","Lapin","Silex","Marne","Pierre à chaux","Marbre","Van","Pierre à plâtre","Sel","Fer","Cuivre","Chat","Étain","Plomb","Zinc","Mercure","Crible",
+      "Lauréole","Mousse","Fragon","Perce neige","Taureau","Laurier thym","Amadouvier","Mézéréon","Peuplier","Cognée","Ellébore","Brocoli","Laurier","Avelinier","Vache","Buis","Lichen","If","Pulmonaire","Serpette","Thlaspi","Thymèle","Chiendent","Trainasse","Lièvre","Guède","Noisetier","Cyclamen","Chélidoine","Traîneau",
+      "Tussilage","Cornouiller","Violier","Troène","Bouc","Asaret","Alaterne","Violette","Marceau","Bêche","Narcisse","Orme","Fumeterre","Vélar","Chèvre","Épinard","Doronic","Mouron","Cerfeuil","Cordeau","Mandragore","Persil","Cochléaria","Pâquerette","Thon","Pissenlit","Sylvie","Capillaire","Frêne","Plantoir",
+      "Primevère","Platane","Asperge","Tulipe","Poule","Bette","Bouleau","Jonquille","Aulne","Couvoir","Pervenche","Charme","Morille","Hêtre","Abeille","Laitue","Mélèze","Ciguë","Radis","Ruche","Gainier","Romaine","Marronnier","Roquette","Pigeon","Lilas","Anémone","Pensée","Myrtille","Greffoir",
+      "Rose","Chêne","Fougère","Aubépine","Rossignol","Ancolie","Muguet","Champignon","Hyacinthe","Râteau","Rhubarbe","Sainfoin","Bâton-d'or","Chamérisier","Ver à soie","Consoude","Pimprenelle","Corbeille d'or","Arroche","Sarcloir","Statice","Fritillaire","Bourrache","Valériane","Carpe","Fusain","Civette","Buglosse","Sénevé","Houlette",
+      "Luzerne","Hémérocalle","Trèfle","Angélique","Canard","Mélisse","Fromental","Martagon","Serpolet","Faux","Fraise","Bétoine","Pois","Acacia","Caille","Œillet","Sureau","Pavot","Tilleul","Fourche","Barbeau","Camomille","Chèvrefeuille","Caille-lait","Tanche","Jasmin","Verveine","Thym","Pivoine","Chariot",
+      "Seigle","Avoine","Oignon","Véronique","Mulet","Romarin","Concombre","Échalote","Absinthe","Faucille","Coriandre","Artichaut","Giroflée","Lavande","Chamois","Tabac","Groseille","Gesse","Cerise","Parc","Menthe","Cumin","Haricot","Orcanète","Pintade","Sauge","Ail","Vesce","Blé","Chalemie",
+      "Épeautre","Bouillon-blanc","Melon","Ivraie","Bélier","Prêle","Armoise","Carthame","Mûre","Arrosoir","Panic","Salicorne","Abricot","Basilic","Brebis","Guimauve","Lin","Amande","Gentiane","Écluse","Carline","Câprier","Lentille","Aunée","Loutre","Myrte","Colza","Lupin","Coton","Moulin",
+      "Prune","Millet","Lycoperdon","Escourgeon","Saumon","Tubéreuse","Sucrion","Apocyn","Réglisse","Échelle","Pastèque","Fenouil","Épine-vinette","Noix","Truite","Citron","Cardère","Nerprun","Tagette","Hotte","Églantier","Noisette","Houblon","Sorgho","Écrevisse","Bigarade","Verge d'or","Maïs","Marron","Panier",
+      "Vertu", "Génie", "Travail", "Opinion", "Récompenses", "Révolution",
+      ] }}
+- name: Calendrier Republicain Jour de la Decade
+  state: "{{this.attributes.get('noms',[''])[state_attr('sensor.calendrier_republicain_date_debut','jours_depuis_debut') % 10]}}"
+  attributes:
+    noms: >-
+      {{ ["Primidi", "Duodi", "Tridi", "Quartidi", "Quintidi", "Sextidi", "Septidi", "Octidi", "Nonidi", "Décadi" ] }}
+- name: Calendrier Republicain Date Complete
+  state: "{{states('sensor.calendrier_republicain_jour_de_la_decade')}} {{states('sensor.calendrier_republicain_jour_du_mois')}} {{states('sensor.calendrier_republicain_mois')}} ({{states('sensor.calendrier_republicain_nom_du_jour')}})"
